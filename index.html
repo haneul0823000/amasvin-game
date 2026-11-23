@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#65A8E0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>아마스빈 프레시 캐치! - 신선한 원재료를 받아라!</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Jua & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- Tone.js for procedural cute game sound effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <style>
+    :root {
+      --amasvin-sky: #65A8E0;
+      --amasvin-blue: #3B82C4;
+      --amasvin-pink: #F28B82;
+      --amasvin-yellow: #F9E784;
+      --amasvin-green: #7CB342;
+      --amasvin-cream: #FFFDF7;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+
+    input, textarea {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    html, body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: var(--amasvin-cream);
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    .font-jua {
+      font-family: 'Jua', sans-serif;
+    }
+
+    /* 모바일 전체 화면 앱 쉘 */
+    #app-shell {
+      width: 100%;
+      height: 100dvh;
+      background-color: var(--amasvin-cream);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    /* 상단 스트라이프 어닝(차양) 장식 */
+    .awning-bar {
+      height: 22px;
+      width: 100%;
+      display: flex;
+      position: relative;
+      z-index: 30;
+      flex-shrink: 0;
+      filter: drop-shadow(0 3px 3px rgba(0,0,0,0.08));
+    }
+    .awning-scallop {
+      flex: 1;
+      height: 100%;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
+    .awning-scallop:nth-child(odd) {
+      background-color: #F28B82;
+    }
+    .awning-scallop:nth-child(even) {
+      background-color: #F9E784;
+    }
+
+    /* 손그림 느낌의 테두리 박스 */
+    .hand-drawn-card {
+      background: #FFFFFF;
+      border: 2.5px solid #2D2926;
+      border-radius: 22px;
+      box-shadow: 0 4px 0 #2D2926;
+    }
+
+    .hand-drawn-btn {
+      border: 2.5px solid #2D2926;
+      border-radius: 9999px;
+      box-shadow: 0 4px 0 #2D2926;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      touch-action: manipulation;
+    }
+    .hand-drawn-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #2D2926;
+    }
+
+    /* 둥실둥실 애니메이션 */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: floatSlow 2.8s ease-in-out infinite;
+    }
+
+    /* 화면 흔들림 (방해 요소 피격 시) */
+    @keyframes shakeScreen {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px) rotate(-0.8deg); }
+      40% { transform: translateX(7px) rotate(0.8deg); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+    .shake-active {
+      animation: shakeScreen 0.35s ease-in-out;
+    }
+
+    /* 모바일 스크롤 최적화 */
+    .custom-scroll {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* 가상 바코드 패턴 */
+    .barcode-lines {
+      height: 36px;
+      background: repeating-linear-gradient(
+        to right,
+        #2D2926 0px, #2D2926 2px,
+        transparent 2px, transparent 5px,
+        #2D2926 5px, #2D2926 9px,
+        transparent 9px, transparent 11px,
+        #2D2926 11px, #2D2926 12px,
+        transparent 12px, transparent 16px
+      );
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 모바일 웹 애플리케이션 컨테이너 -->
+  <div id="app-shell">
+    <!-- 상단 어닝 장식 -->
+    <div class="awning-bar" aria-hidden="true">
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+      <div class="awning-scallop"></div>
+    </div>
+
+    <!-- 상단 브랜드 헤더 (시작/결과 화면용) -->
+    <header id="main-header" class="px-4 pt-2 pb-2 flex items-center justify-between bg-[#FFFDF7] z-20 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="bg-[#5C9BD5] text-white font-jua px-3 py-1 rounded-full text-sm tracking-wide border-2 border-[#2D2926]">
+          Amasvin
+        </div>
+        <span class="text-[11px] font-bold text-[#5C9BD5] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+          MOBILE ONLY
+        </span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="btn-sound-toggle" type="button" onclick="toggleSound()" class="w-9 h-9 rounded-full bg-white border-2 border-[#2D2926] flex items-center justify-center text-sm shadow-sm active:scale-95" title="효과음 켜기/끄기">
+          🔊
+        </button>
+        <button type="button" onclick="openModal('modal-qr')" class="px-2.5 h-9 rounded-full bg-[#FFF3CD] border-2 border-[#2D2926] text-xs font-bold text-[#2D2926] flex items-center gap-1 active:scale-95">
+          <span>📱 QR공유</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- =====================================================================
+         1. 시작 화면 (LANDING SCREEN)
+    ====================================================================== -->
+    <section id="screen-start" class="flex-1 overflow-y-auto custom-scroll px-4 pb-5 flex flex-col justify-between">
+      <div>
+        <!-- 타이틀 배너 일러스트 카드 -->
+        <div class="relative mt-1 rounded-3xl border-[2.5px] border-[#2D2926] overflow-hidden bg-gradient-to-b from-[#9ED2F6] via-[#CBE8FC] to-[#8BC34A] p-4 shadow-[0_4px_0_#2D2926]">
+          <svg class="w-full h-16 absolute top-1 left-0 pointer-events-none opacity-90" viewBox="0 0 360 70">
+            <path d="M25,40 Q25,25 40,25 Q48,12 65,18 Q80,15 85,30 Q98,32 95,45 L25,45 Z" fill="#FFFFFF"/>
+            <path d="M260,32 Q260,18 275,18 Q285,8 300,14 Q315,12 318,26 Q330,28 326,40 L260,40 Z" fill="#FFFFFF"/>
+          </svg>
+
+          <div class="relative z-10 text-center">
+            <span class="inline-block bg-white/95 text-[#2D2926] text-xs font-extrabold px-3 py-1 rounded-full border-2 border-[#2D2926] mb-1.5">
+              🌱 건강한 원재료 캐치 챌린지!
+            </span>
+            <h1 class="font-jua text-[26px] leading-tight text-[#2D2926] drop-shadow-[0_2px_0_#FFFFFF]">
+              아마스빈 프레시 캐치!<br/>
+              <span class="text-[#E53935]">신선한 원재료</span>를 받아라!
+            </h1>
+          </div>
+
+          <!-- 떵구 & 버부리 메인 일러스트 SVG -->
+          <div class="relative z-10 flex justify-center items-end mt-2 h-36">
+            <svg viewBox="0 0 320 155" class="w-full max-w-[300px] h-full overflow-visible animate-float">
+              <g transform="translate(32, 24) rotate(-15)">
+                <path d="M0,-10 C-10,-10 -14,0 -10,10 C-6,18 0,22 0,22 C0,22 6,18 10,10 C14,0 10,-10 0,-10 Z" fill="#EF4444" stroke="#2D2926" stroke-width="2.2"/>
+                <path d="M-8,-9 L-3,-5 L0,-11 L3,-5 L8,-9 L4,-2 L-4,-2 Z" fill="#43A047" stroke="#2D2926" stroke-width="1.5"/>
+                <circle cx="-4" cy="2" r="1" fill="#FDE047"/><circle cx="4" cy="3" r="1" fill="#FDE047"/><circle cx="0" cy="9" r="1" fill="#FDE047"/>
+              </g>
+              <g transform="translate(278, 22) rotate(20)">
+                <path d="M0,-14 C10,-6 12,6 0,16 C-12,6 -10,-6 0,-14 Z" fill="#66BB6A" stroke="#2D2926" stroke-width="2.2"/>
+                <path d="M0,-10 L0,13 M0,0 L5,-4 M0,4 L-5,0" stroke="#2D2926" stroke-width="1.6" stroke-linecap="round"/>
+              </g>
+              <g transform="translate(46, 86)">
+                <circle cx="0" cy="0" r="13" fill="#FB8C00" stroke="#2D2926" stroke-width="2.2"/>
+                <circle cx="0" cy="0" r="9.5" fill="#FFE0B2"/>
+                <path d="M0,-9 L0,9 M-9,0 L9,0 M-6,-6 L6,6 M-6,6 L6,-6" stroke="#FB8C00" stroke-width="1.5"/>
+              </g>
+
+              <!-- 버부리 캐릭터 -->
+              <g transform="translate(232, 88)">
+                <path d="M-24,-6 Q-36,-18 -34,-28" fill="none" stroke="#2D2926" stroke-width="3.2" stroke-linecap="round"/>
+                <path d="M-34,-28 L-38,-33 M-34,-28 L-33,-34 M-34,-28 L-29,-32" stroke="#2D2926" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M24,4 Q34,10 36,16" fill="none" stroke="#2D2926" stroke-width="3.2" stroke-linecap="round"/>
+                <path d="M-10,25 L-10,36 L-16,36" fill="none" stroke="#2D2926" stroke-width="3.2" stroke-linecap="round"/>
+                <path d="M10,25 L10,36 L16,36" fill="none" stroke="#2D2926" stroke-width="3.2" stroke-linecap="round"/>
+                <circle cx="0" cy="0" r="27" fill="#231F20" stroke="#2D2926" stroke-width="2.5"/>
+                <ellipse cx="-14" cy="-13" rx="5" ry="2.2" transform="rotate(-38 -14 -13)" fill="#FFFFFF"/>
+                <circle cx="-8" cy="-18" r="2" fill="#FFFFFF"/>
+                <path d="M6,-25 L8,-37 L15,-30 L22,-36 L21,-23 Q14,-20 6,-25 Z" fill="#F4D03F" stroke="#2D2926" stroke-width="2" stroke-linejoin="round"/>
+                <ellipse cx="-8" cy="-2" rx="2.8" ry="3.8" fill="#FFFFFF"/>
+                <ellipse cx="9" cy="0" rx="2.8" ry="3.8" fill="#FFFFFF"/>
+                <line x1="-15" y1="5" x2="-13" y2="9" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="-11" y1="6" x2="-9" y2="10" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="11" y1="7" x2="10" y2="11" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="15" y1="7" x2="14" y2="11" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M-4,7 Q1,11 6,7" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+              </g>
+
+              <!-- 주인공 '떵구' 캐릭터 -->
+              <g transform="translate(142, 92)">
+                <path d="M-16,28 L-16,42 Q-16,46 -10,46 L-5,46 Q-2,46 -2,40 L-2,32" fill="#FFFFFF" stroke="#2D2926" stroke-width="2.8" stroke-linejoin="round"/>
+                <path d="M4,30 L12,24 Q18,21 21,27 Q23,33 16,36 L8,38" fill="#FFFFFF" stroke="#2D2926" stroke-width="2.8" stroke-linejoin="round"/>
+                <circle cx="15" cy="29" r="2.2" fill="#2D2926"/>
+                <circle cx="12" cy="26" r="1" fill="#2D2926"/><circle cx="15" cy="25" r="1" fill="#2D2926"/><circle cx="18" cy="26.5" r="1" fill="#2D2926"/>
+                <path d="M-20,2 C-24,14 -21,28 -16,32 L12,32 C18,28 21,14 18,2 Z" fill="#FFFFFF" stroke="#2D2926" stroke-width="2.8"/>
+                <path d="M-1,13 C-1,10 -6,10 -6,14 C-6,18 -1,21 -1,21 C-1,21 4,18 4,14 C4,10 -1,10 -1,13 Z" fill="#2D2926"/>
+                <path d="M-18,6 C-30,-2 -32,-18 -24,-28" fill="none" stroke="#2D2926" stroke-width="8" stroke-linecap="round"/>
+                <path d="M-18,6 C-30,-2 -32,-18 -24,-28" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M18,6 C30,-2 32,-18 24,-28" fill="none" stroke="#2D2926" stroke-width="8" stroke-linecap="round"/>
+                <path d="M18,6 C30,-2 32,-18 24,-28" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+
+                <ellipse cx="0" cy="-14" rx="28" ry="23" fill="#FFFFFF" stroke="#2D2926" stroke-width="2.8"/>
+                <path d="M-24,-26 C-34,-28 -35,-18 -26,-16" fill="#FFFFFF" stroke="#2D2926" stroke-width="2.8" stroke-linecap="round"/>
+                <path d="M23,-26 C34,-28 35,-17 25,-16" fill="#2D2926" stroke="#2D2926" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M-18,-32 C-8,-38 10,-38 19,-31 C14,-22 5,-20 -2,-23 C-9,-26 -14,-27 -18,-32 Z" fill="#2D2926"/>
+                <path d="M-27,-12 C-20,-13 -16,-6 -20,1 C-24,-2 -27,-7 -27,-12 Z" fill="#2D2926"/>
+                <ellipse cx="-9" cy="-16" rx="2.3" ry="3.3" fill="#2D2926"/>
+                <ellipse cx="9" cy="-16" rx="2.3" ry="3.3" fill="#2D2926"/>
+                <rect x="-4.5" y="-13" width="9" height="5.5" rx="2.8" fill="#2D2926"/>
+                <line x1="-17" y1="-11" x2="-18" y2="-7" stroke="#2D2926" stroke-width="2" stroke-linecap="round"/>
+                <line x1="-13" y1="-11" x2="-14" y2="-7" stroke="#2D2926" stroke-width="2" stroke-linecap="round"/>
+                <line x1="13" y1="-11" x2="13" y2="-7" stroke="#2D2926" stroke-width="2" stroke-linecap="round"/>
+                <line x1="17" y1="-11" x2="17" y2="-7" stroke="#2D2926" stroke-width="2" stroke-linecap="round"/>
+                <path d="M-4,-5 L3,-5 Q6,-5 7,-7" fill="none" stroke="#2D2926" stroke-width="2" stroke-linecap="round"/>
+                <path d="M5,-5 Q12,-8 18,-3 Q11,0 5,-5 Z" fill="#66BB6A" stroke="#2D2926" stroke-width="1.3"/>
+                <path d="M6,-5 Q10,-1 13,2 Q8,2 6,-5 Z" fill="#81C784" stroke="#2D2926" stroke-width="1.3"/>
+
+                <g transform="translate(0, -44)">
+                  <circle cx="-12" cy="-2" r="7" fill="#EF4444" stroke="#2D2926" stroke-width="1.8"/>
+                  <ellipse cx="2" cy="-3" rx="9" ry="5" transform="rotate(-15 2 -3)" fill="#66BB6A" stroke="#2D2926" stroke-width="1.8"/>
+                  <circle cx="14" cy="-2" r="6.5" fill="#FB8C00" stroke="#2D2926" stroke-width="1.8"/>
+                  <path d="M-28,0 L28,0 L22,16 Q0,19 -22,16 Z" fill="#D7A86E" stroke="#2D2926" stroke-width="2.4" stroke-linejoin="round"/>
+                  <rect x="-30" y="-3" width="60" height="5" rx="2.5" fill="#E6BE8A" stroke="#2D2926" stroke-width="2.2"/>
+                  <path d="M-16,2 L-13,16 M0,2 L0,17 M16,2 L13,16 M-24,8 L24,8" stroke="#8D5B2C" stroke-width="1.5"/>
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 원재료 & 방해 요소 도감 가이드 -->
+        <div class="mt-3 hand-drawn-card p-3.5">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="font-jua text-base text-[#2D2926] flex items-center gap-1.5">
+              <span>🧺</span> 30초 동안 신선한 재료를 모아요!
+            </h2>
+            <span class="text-[11px] font-bold text-[#3B82C4] bg-blue-50 px-2 py-0.5 rounded-full">
+              좌우 터치·드래그
+            </span>
+          </div>
+
+          <div class="grid grid-cols-5 gap-1.5 text-center mb-2.5">
+            <div class="bg-[#F1F8E9] border border-[#C5E1A5] rounded-xl p-1.5">
+              <div class="text-lg">🍃</div>
+              <div class="text-[10px] font-bold text-gray-800 leading-tight mt-0.5">하동녹차</div>
+              <div class="text-[10px] font-extrabold text-[#43A047]">+100</div>
+            </div>
+            <div class="bg-[#FFEBEE] border border-[#FFCDD2] rounded-xl p-1.5">
+              <div class="text-lg">🍓</div>
+              <div class="text-[10px] font-bold text-gray-800 leading-tight mt-0.5">생딸기</div>
+              <div class="text-[10px] font-extrabold text-[#E53935]">+150</div>
+            </div>
+            <div class="bg-[#FFF3E0] border border-[#FFE0B2] rounded-xl p-1.5">
+              <div class="text-lg">🍊</div>
+              <div class="text-[10px] font-bold text-gray-800 leading-tight mt-0.5">생오렌지</div>
+              <div class="text-[10px] font-extrabold text-[#FB8C00]">+150</div>
+            </div>
+            <div class="bg-[#E3F2FD] border border-[#BBDEFB] rounded-xl p-1.5">
+              <div class="text-lg">🥛</div>
+              <div class="text-[10px] font-bold text-gray-800 leading-tight mt-0.5">생우유</div>
+              <div class="text-[10px] font-extrabold text-[#1E88E5]">+200</div>
+            </div>
+            <div class="bg-[#F3E5F5] border border-[#E1BEE7] rounded-xl p-1.5">
+              <div class="text-lg">🍶</div>
+              <div class="text-[10px] font-bold text-gray-800 leading-tight mt-0.5">생요거트</div>
+              <div class="text-[10px] font-extrabold text-[#8E24AA]">+200</div>
+            </div>
+          </div>
+
+          <div class="bg-[#FFF5F5] border border-[#FEB2B2] rounded-xl px-3 py-2 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🧪⚠️</span>
+              <div>
+                <p class="text-xs font-extrabold text-[#C53030]">방해 요소 주의! (인공 시럽 · 합성 파우더)</p>
+                <p class="text-[10px] text-gray-600">바구니에 들어가면 <strong class="text-[#C53030]">-150점 감점</strong> 및 콤보 초기화!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 CTA 버튼 그룹 -->
+      <div class="mt-3 space-y-2">
+        <button type="button" onclick="startGame()" class="w-full py-3.5 bg-[#FF6B6B] active:bg-[#ff5a5a] text-white font-jua text-xl tracking-wide hand-drawn-btn flex items-center justify-center gap-2">
+          <span>🎮 게임 시작하기 (30초)</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="openModal('modal-rewards')" class="py-2.5 bg-[#FFF9DB] text-[#2D2926] font-bold text-xs hand-drawn-btn flex items-center justify-center gap-1">
+            <span>🎁 쿠폰 · 굿즈 혜택</span>
+          </button>
+          <button type="button" onclick="openRankingModal()" class="py-2.5 bg-[#E7F5FF] text-[#2D2926] font-bold text-xs hand-drawn-btn flex items-center justify-center gap-1">
+            <span>🏆 실시간 랭킹 TOP 5</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         2. 게임 플레이 화면 (GAMEPLAY SCREEN)
+    ====================================================================== -->
+    <section id="screen-game" class="hidden flex-1 relative flex flex-col overflow-hidden bg-[#9ED2F6]">
+      <div class="relative z-20 px-3 pt-2 pb-2 flex items-center justify-between gap-2 bg-white/85 backdrop-blur-sm border-b-2 border-[#2D2926]">
+        <button type="button" onclick="togglePause()" class="w-9 h-9 rounded-full bg-[#65A8E0] text-white border-2 border-[#2D2926] flex items-center justify-center font-bold text-sm shadow-[0_2px_0_#2D2926] active:translate-y-0.5" aria-label="일시정지">
+          ⏸
+        </button>
+
+        <div class="flex-1">
+          <div class="flex justify-between items-center text-[11px] font-extrabold text-[#2D2926] mb-0.5 px-1">
+            <span>⏱ 남은 시간</span>
+            <span id="hud-time-text" class="text-[#E53935] text-sm font-jua">30.0s</span>
+          </div>
+          <div class="w-full h-3 bg-gray-200 rounded-full border-2 border-[#2D2926] overflow-hidden">
+            <div id="hud-time-bar" class="h-full bg-gradient-to-r from-[#66BB6A] via-[#FDD835] to-[#EF5350] transition-all duration-100" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-[#FFFDF7] border-2 border-[#2D2926] rounded-full pl-1.5 pr-3 py-1 shadow-[0_2px_0_#2D2926]">
+          <svg width="24" height="24" viewBox="0 0 40 40">
+            <circle cx="20" cy="22" r="15" fill="#231F20"/>
+            <path d="M23,8 L25,2 L29,6 L33,3 L32,10 Z" fill="#F4D03F"/>
+            <circle cx="15" cy="21" r="2" fill="#FFF"/>
+            <circle cx="25" cy="22" r="2" fill="#FFF"/>
+            <path d="M17,26 Q20,29 23,26" fill="none" stroke="#FFF" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span id="hud-score" class="font-jua text-lg text-[#2D2926] leading-none">0</span>
+        </div>
+      </div>
+
+      <div id="hud-combo-badge" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+        <span class="inline-block bg-[#FFD54F] text-[#2D2926] font-jua text-sm px-3 py-0.5 rounded-full border-2 border-[#2D2926] shadow-sm">
+          🔥 <span id="hud-combo-count">2</span> COMBO!
+        </span>
+      </div>
+
+      <!-- 모바일 터치·드래그 전용 게임 캔버스 영역 -->
+      <div id="canvas-wrapper" class="flex-1 relative w-full h-full touch-none select-none">
+        <canvas id="game-canvas" class="block w-full h-full touch-none"></canvas>
+
+        <div id="touch-hint" class="absolute bottom-28 left-1/2 -translate-x-1/2 pointer-events-none bg-black/65 text-white text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap transition-opacity duration-500">
+          👈 화면을 좌우로 터치·드래그해 이동! 👉
+        </div>
+      </div>
+
+      <!-- 일시정지 오버레이 -->
+      <div id="pause-overlay" class="hidden absolute inset-0 z-30 bg-black/50 flex items-center justify-center p-6">
+        <div class="hand-drawn-card w-full max-w-xs p-5 text-center">
+          <div class="text-3xl mb-1">⏸️</div>
+          <h3 class="font-jua text-2xl text-[#2D2926] mb-1">잠시 쉬어가는 중!</h3>
+          <p class="text-xs text-gray-600 mb-4">떵구가 바구니를 들고 기다리고 있어요.</p>
+          <div class="space-y-2">
+            <button type="button" onclick="togglePause()" class="w-full py-2.5 bg-[#66BB6A] text-white font-jua text-lg hand-drawn-btn">
+              ▶ 계속하기
+            </button>
+            <button type="button" onclick="quitToHome()" class="w-full py-2 bg-gray-100 text-gray-700 font-bold text-xs hand-drawn-btn">
+              🏠 처음으로 돌아가기
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         3. 결과 및 할인 쿠폰 발급 화면 (RESULT & COUPON SCREEN)
+    ====================================================================== -->
+    <section id="screen-result" class="hidden flex-1 overflow-y-auto custom-scroll px-4 pb-5">
+      <div class="mt-1 hand-drawn-card p-4 text-center bg-gradient-to-b from-[#FFFDF7] to-[#FFF6E5]">
+        <span id="result-grade-badge" class="inline-block bg-[#FF6B6B] text-white text-xs font-extrabold px-3 py-1 rounded-full border-2 border-[#2D2926] mb-1">
+          S등급 · 하동 녹차 마스터
+        </span>
+        <p class="text-xs text-gray-600 font-bold mt-1">최종 획득 점수</p>
+        <div class="font-jua text-4xl text-[#2D2926] my-0.5">
+          <span id="result-score">0</span><span class="text-xl ml-0.5">점</span>
+        </div>
+        <p id="result-stats" class="text-[11px] text-gray-500">
+          수집한 신선 원재료 0개 · 최대 0 콤보
+        </p>
+      </div>
+
+      <div class="mt-3 hand-drawn-card p-4 bg-white relative overflow-hidden">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-extrabold text-[#3B82C4] flex items-center gap-1">
+            🎟️ 아마스빈 즉시 할인 쿠폰 발급 완료!
+          </span>
+          <span class="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">
+            매장/키오스크 사용가능
+          </span>
+        </div>
+
+        <div class="border-2 border-dashed border-[#F28B82] rounded-2xl p-3 bg-[#FFF9F9] text-center">
+          <p id="coupon-subtitle" class="text-[11px] font-bold text-[#E53935]">달콤 상큼한 리워드 혜택</p>
+          <h3 id="coupon-title" class="font-jua text-2xl text-[#2D2926] mt-0.5">
+            아마스빈 전 메뉴 2,000원 할인권
+          </h3>
+          <p class="text-[10px] text-gray-500 mt-1">유효기간: 발급일로부터 14일 이내 (1인 1회)</p>
+
+          <div class="mt-2.5 bg-white p-2 rounded-xl border border-gray-200">
+            <div class="barcode-lines w-4/5 mx-auto"></div>
+            <div class="flex items-center justify-center gap-2 mt-1.5">
+              <code id="coupon-code" class="text-xs font-mono font-bold tracking-widest text-[#2D2926]">AMSV-FRESH-2026</code>
+              <button type="button" onclick="copyCouponCode()" class="px-2.5 py-1 bg-[#2D2926] text-white text-[10px] font-bold rounded-md active:scale-95">
+                복사
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 hand-drawn-card p-3.5">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-jua text-base text-[#2D2926]">🏆 주간 랭킹 & 경품 응모</h3>
+          <span class="text-[10px] font-bold text-[#E53935]">1~3위 굿즈·기프티콘 증정!</span>
+        </div>
+
+        <div id="rank-register-box" class="flex gap-1.5 mb-3">
+          <input id="player-nickname" type="text" maxlength="8" enterkeyhint="done" placeholder="닉네임 입력 (최대 8자)" class="flex-1 min-w-0 px-3 py-2.5 text-xs border-2 border-[#2D2926] rounded-xl focus:outline-none focus:bg-yellow-50 font-bold" />
+          <button type="button" onclick="registerScore()" class="px-3.5 py-2.5 bg-[#5C9BD5] text-white font-bold text-xs rounded-xl border-2 border-[#2D2926] active:scale-95 whitespace-nowrap">
+            랭킹 등록
+          </button>
+        </div>
+        <p id="rank-registered-msg" class="hidden text-center text-xs font-bold text-[#43A047] bg-green-50 py-1.5 rounded-xl mb-2.5 border border-green-200">
+          ✅ 랭킹 등록 완료! 주간 이벤트에 자동 응모되었습니다.
+        </p>
+
+        <ul id="result-ranking-list" class="space-y-1.5 text-xs"></ul>
+      </div>
+
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button type="button" onclick="quitToHome()" class="py-3 bg-white text-[#2D2926] font-bold text-sm hand-drawn-btn">
+          🏠 메인으로
+        </button>
+        <button type="button" onclick="startGame()" class="py-3 bg-[#FF6B6B] text-white font-jua text-base hand-drawn-btn">
+          🔄 다시 도전하기
+        </button>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         모달 1: 혜택 & 굿즈 경품 안내 (REWARDS MODAL)
+    ====================================================================== -->
+    <div id="modal-rewards" class="hidden absolute inset-0 z-40 bg-black/50 flex items-center justify-center p-4">
+      <div class="hand-drawn-card w-full max-w-sm p-4 max-h-[82dvh] overflow-y-auto custom-scroll">
+        <div class="flex items-center justify-between pb-2 border-b border-gray-200">
+          <h3 class="font-jua text-lg text-[#2D2926]">🎁 참여 혜택 & 굿즈 경품</h3>
+          <button type="button" onclick="closeModal('modal-rewards')" class="w-8 h-8 rounded-full bg-gray-100 font-bold text-sm">✕</button>
+        </div>
+
+        <div class="mt-3 space-y-2.5 text-xs">
+          <div class="bg-[#FFF9DB] p-3 rounded-2xl border border-[#F9E784]">
+            <p class="font-extrabold text-[#2D2926] mb-1">1️⃣ 점수 달성 즉시 100% 쿠폰 발급</p>
+            <ul class="space-y-1 text-gray-700">
+              <li>• <strong>2,500점 이상:</strong> 아메리카노/버블티 <span class="text-[#E53935] font-bold">50% 할인 쿠폰</span></li>
+              <li>• <strong>1,200점 이상:</strong> 전 메뉴 <span class="text-[#E53935] font-bold">2,000원 할인 쿠폰</span></li>
+              <li>• <strong>참여 전원:</strong> 전 메뉴 <span class="text-[#3B82C4] font-bold">1,000원 할인 쿠폰</span></li>
+            </ul>
+          </div>
+
+          <div class="bg-[#F0F7FF] p-3 rounded-2xl border border-[#BEE3F8]">
+            <p class="font-extrabold text-[#2D2926] mb-1">2️⃣ 주간 상위 랭커 스페셜 굿즈 증정</p>
+            <ul class="space-y-1 text-gray-700">
+              <li>🥇 <strong>1위:</strong> 딸기 떵구 & 버부리 인형 키링 세트 + 음료 기프티콘 3매</li>
+              <li>🥈 <strong>2위:</strong> 딸기 버부리 스퀴시 말랑이 + 음료 기프티콘 2매</li>
+              <li>🥉 <strong>3위:</strong> 아마스빈 신메뉴 음료 기프티콘 2매</li>
+            </ul>
+          </div>
+        </div>
+
+        <button type="button" onclick="closeModal('modal-rewards')" class="mt-4 w-full py-2.5 bg-[#5C9BD5] text-white font-jua text-base hand-drawn-btn">
+          확인했어요!
+        </button>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         모달 2: 실시간 랭킹 보기 (RANKING MODAL)
+    ====================================================================== -->
+    <div id="modal-ranking" class="hidden absolute inset-0 z-40 bg-black/50 flex items-center justify-center p-4">
+      <div class="hand-drawn-card w-full max-w-sm p-4">
+        <div class="flex items-center justify-between pb-2 border-b border-gray-200">
+          <h3 class="font-jua text-lg text-[#2D2926]">🏆 실시간 프레시 랭킹 TOP 5</h3>
+          <button type="button" onclick="closeModal('modal-ranking')" class="w-8 h-8 rounded-full bg-gray-100 font-bold text-sm">✕</button>
+        </div>
+        <ul id="modal-ranking-list" class="mt-3 space-y-2 text-xs"></ul>
+        <button type="button" onclick="closeModal('modal-ranking')" class="mt-4 w-full py-2.5 bg-[#FF6B6B] text-white font-jua text-base hand-drawn-btn">
+          닫기
+        </button>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         모달 3: QR코드 접속 공유 (QR MODAL)
+    ====================================================================== -->
+    <div id="modal-qr" class="hidden absolute inset-0 z-40 bg-black/50 flex items-center justify-center p-4">
+      <div class="hand-drawn-card w-full max-w-xs p-5 text-center">
+        <h3 class="font-jua text-xl text-[#2D2926]">📱 QR코드로 바로 접속!</h3>
+        <p class="text-xs text-gray-600 mt-1">모바일 카메라로 스캔하면<br/>친구와 함께 바로 플레이할 수 있어요!</p>
+
+        <div class="my-4 p-3 bg-white border-2 border-[#2D2926] rounded-2xl inline-block">
+          <svg width="130" height="130" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#FFFFFF"/>
+            <rect x="8" y="8" width="26" height="26" fill="none" stroke="#2D2926" stroke-width="5"/>
+            <rect x="15" y="15" width="12" height="12" fill="#2D2926"/>
+            <rect x="66" y="8" width="26" height="26" fill="none" stroke="#2D2926" stroke-width="5"/>
+            <rect x="73" y="15" width="12" height="12" fill="#2D2926"/>
+            <rect x="8" y="66" width="26" height="26" fill="none" stroke="#2D2926" stroke-width="5"/>
+            <rect x="15" y="73" width="12" height="12" fill="#2D2926"/>
+            <rect x="42" y="10" width="6" height="6" fill="#2D2926"/>
+            <rect x="54" y="16" width="6" height="6" fill="#2D2926"/>
+            <rect x="42" y="26" width="12" height="6" fill="#2D2926"/>
+            <rect x="10" y="42" width="12" height="6" fill="#2D2926"/>
+            <rect x="28" y="48" width="6" height="12" fill="#2D2926"/>
+            <rect x="66" y="44" width="12" height="6" fill="#2D2926"/>
+            <rect x="84" y="52" width="8" height="8" fill="#2D2926"/>
+            <rect x="44" y="68" width="6" height="12" fill="#2D2926"/>
+            <rect x="58" y="74" width="12" height="6" fill="#2D2926"/>
+            <rect x="76" y="68" width="14" height="6" fill="#2D2926"/>
+            <rect x="66" y="84" width="12" height="8" fill="#2D2926"/>
+            <circle cx="50" cy="50" r="10" fill="#FF6B6B"/>
+            <circle cx="50" cy="50" r="4" fill="#FFFFFF"/>
+          </svg>
+        </div>
+
+        <button type="button" onclick="copyShareLink()" class="w-full py-2.5 bg-[#FFF3CD] text-[#2D2926] font-bold text-xs hand-drawn-btn mb-2">
+          🔗 이벤트 링크 복사하기
+        </button>
+        <button type="button" onclick="closeModal('modal-qr')" class="w-full py-2 bg-[#2D2926] text-white font-bold text-xs rounded-full">
+          닫기
+        </button>
+      </div>
+    </div>
+
+    <!-- 토스트 알림 메시지 박스 -->
+    <div id="toast-box" class="hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#2D2926] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg whitespace-nowrap transition-opacity duration-200">
+      알림 메시지
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 1. 사운드 이펙트 (Tone.js)
+     */
+    let soundEnabled = true;
+    let synth = null;
+
+    function initAudio() {
+      if (!synth && typeof Tone !== 'undefined') {
+        synth = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: 'triangle' },
+          envelope: { attack: 0.01, decay: 0.12, sustain: 0.05, release: 0.2 }
+        }).toDestination();
+        synth.volume.value = -8;
+      }
+    }
+
+    function playCatchSound(isGood, combo = 1) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (Tone.context.state !== 'running') Tone.start();
+        if (isGood) {
+          const notes = ['C5', 'D5', 'E5', 'G5', 'A5', 'C6'];
+          const note = notes[Math.min(combo - 1, notes.length - 1)];
+          synth.triggerAttackRelease(note, '16n');
+        } else {
+          synth.triggerAttackRelease(['D3', 'Eb3'], '8n');
+        }
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('btn-sound-toggle');
+      btn.textContent = soundEnabled ? '🔊' : '🔇';
+      showToast(soundEnabled ? '효과음이 켜졌습니다.' : '효과음이 꺼졌습니다.');
+    }
+
+    /**
+     * 2. 토스트, 모달 및 모바일 클립보드 유틸리티
+     */
+    let toastTimer = null;
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        box.classList.add('hidden');
+      }, 2200);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    async function copyTextMobile(text, successMsg) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          showToast(successMsg);
+          return;
+        }
+      } catch (e) {}
+
+      const tempInput = document.createElement('input');
+      tempInput.value = text;
+      tempInput.setAttribute('readonly', '');
+      tempInput.style.position = 'fixed';
+      tempInput.style.opacity = '0';
+      document.body.appendChild(tempInput);
+      tempInput.focus();
+      tempInput.select();
+      tempInput.setSelectionRange(0, text.length);
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast(successMsg);
+    }
+
+    function copyShareLink() {
+      copyTextMobile(window.location.href, '📋 이벤트 페이지 링크가 복사되었습니다!');
+    }
+
+    function copyCouponCode() {
+      const codeText = document.getElementById('coupon-code').textContent;
+      copyTextMobile(codeText, `🎟️ 쿠폰코드 [${codeText}] 복사 완료!`);
+    }
+
+    /**
+     * 3. 랭킹 데이터 관리
+     */
+    const defaultRankings = [
+      { name: '하동녹차덕후', score: 3450, badge: '🥇 키링세트+기프티콘' },
+      { name: '딸기요거트사랑', score: 3100, badge: '🥈 버부리말랑이+기프티콘' },
+      { name: '떵구맘', score: 2850, badge: '🥉 음료 기프티콘 2매' },
+      { name: '버블티매니아', score: 2400, badge: '✨ 50% 쿠폰' },
+      { name: '프레시헌터', score: 2050, badge: '✨ 2,000원 쿠폰' }
+    ];
+
+    let rankingData = [...defaultRankings];
+
+    function renderRankingList(targetId) {
+      const ul = document.getElementById(targetId);
+      if (!ul) return;
+      const sorted = [...rankingData].sort((a, b) => b.score - a.score).slice(0, 5);
+      ul.innerHTML = sorted.map((item, idx) => {
+        const rankNum = idx + 1;
+        const bgClass = idx === 0 ? 'bg-[#FFF9DB] border-[#F4D03F]' :
+                        idx === 1 ? 'bg-gray-50 border-gray-300' :
+                        idx === 2 ? 'bg-[#FFF3E0] border-[#FFCC80]' : 'bg-white border-gray-200';
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${rankNum}위`;
+        return `
+          <li class="flex items-center justify-between px-3 py-2 rounded-xl border ${bgClass}">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-jua text-sm w-6 text-center shrink-0">${medal}</span>
+              <span class="font-bold text-[#2D2926] truncate">${item.name}</span>
+              ${item.badge ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 font-bold text-gray-600 shrink-0">${item.badge}</span>` : ''}
+            </div>
+            <span class="font-jua text-sm text-[#3B82C4] shrink-0 ml-2">${item.score.toLocaleString()}점</span>
+          </li>
+        `;
+      }).join('');
+    }
+
+    function openRankingModal() {
+      renderRankingList('modal-ranking-list');
+      openModal('modal-ranking');
+    }
+
+    function registerScore() {
+      const input = document.getElementById('player-nickname');
+      const nick = input.value.trim();
+      if (!nick) {
+        showToast('닉네임을 입력해주세요!');
+        input.focus();
+        return;
+      }
+      rankingData.push({
+        name: nick,
+        score: gameState.score,
+        badge: '🆕 방금 등록'
+      });
+      document.getElementById('rank-register-box').classList.add('hidden');
+      document.getElementById('rank-registered-msg').classList.remove('hidden');
+      renderRankingList('result-ranking-list');
+      showToast('🎉 주간 랭킹에 등록되었습니다!');
+    }
+
+    /**
+     * 4. 게임 상태 및 원재료 정의
+     */
+    const GAME_DURATION = 30;
+
+    const ITEM_TYPES = [
+      { id: 'greentea', name: '하동 녹찻잎', score: 100, good: true, weight: 28, color: '#66BB6A' },
+      { id: 'strawberry', name: '생딸기', score: 150, good: true, weight: 24, color: '#EF4444' },
+      { id: 'orange', name: '생오렌지', score: 150, good: true, weight: 20, color: '#FB8C00' },
+      { id: 'milk', name: '생우유', score: 200, good: true, weight: 14, color: '#42A5F5' },
+      { id: 'yogurt', name: '목장 생요거트', score: 200, good: true, weight: 14, color: '#AB47BC' },
+      { id: 'syrup', name: '인공 시럽', score: -150, good: false, weight: 18, color: '#5D4037' },
+      { id: 'powder', name: '합성 파우더', score: -150, good: false, weight: 16, color: '#7E57C2' }
+    ];
+
+    const gameState = {
+      running: false,
+      paused: false,
+      timeLeft: GAME_DURATION,
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      caughtCount: 0,
+      lastTimestamp: 0,
+      spawnTimer: 0,
+      items: [],
+      particles: [],
+      floatingTexts: [],
+      basketContents: [],
+      player: {
+        x: 0,
+        targetX: 0,
+        y: 0,
+        width: 78,
+        walkPhase: 0,
+        expression: 'normal',
+        expressionTimer: 0,
+        basketBounce: 0
+      },
+      clouds: [
+        { x: 50, y: 55, scale: 0.9, speed: 12 },
+        { x: 240, y: 95, scale: 1.1, speed: 8 },
+        { x: 150, y: 140, scale: 0.75, speed: 15 }
+      ]
+    };
+
+    /**
+     * 5. 화면 전환 및 게임 시작/종료 컨트롤
+     */
+    function switchScreen(screenId) {
+      ['screen-start', 'screen-game', 'screen-result'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+
+      const header = document.getElementById('main-header');
+      if (screenId === 'screen-game') {
+        header.classList.add('hidden');
+      } else {
+        header.classList.remove('hidden');
+      }
+    }
+
+    function startGame() {
+      initAudio();
+      switchScreen('screen-game');
+      resizeCanvas();
+
+      const canvas = document.getElementById('game-canvas');
+      const logicalW = canvas.clientWidth;
+
+      gameState.running = true;
+      gameState.paused = false;
+      gameState.timeLeft = GAME_DURATION;
+      gameState.score = 0;
+      gameState.combo = 0;
+      gameState.maxCombo = 0;
+      gameState.caughtCount = 0;
+      gameState.items = [];
+      gameState.particles = [];
+      gameState.floatingTexts = [];
+      gameState.basketContents = [];
+      gameState.spawnTimer = 0.2;
+
+      gameState.player.x = logicalW / 2;
+      gameState.player.targetX = logicalW / 2;
+      gameState.player.expression = 'normal';
+      gameState.player.expressionTimer = 0;
+      gameState.player.basketBounce = 0;
+
+      document.getElementById('pause-overlay').classList.add('hidden');
+      document.getElementById('hud-combo-badge').classList.add('hidden');
+
+      const hint = document.getElementById('touch-hint');
+      hint.style.opacity = '1';
+      setTimeout(() => { hint.style.opacity = '0'; }, 2800);
+
+      updateHUD();
+      gameState.lastTimestamp = performance.now();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function togglePause() {
+      if (!gameState.running) return;
+      gameState.paused = !gameState.paused;
+      const overlay = document.getElementById('pause-overlay');
+      if (gameState.paused) {
+        overlay.classList.remove('hidden');
+      } else {
+        overlay.classList.add('hidden');
+        gameState.lastTimestamp = performance.now();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function quitToHome() {
+      gameState.running = false;
+      gameState.paused = false;
+      switchScreen('screen-start');
+    }
+
+    function endGame() {
+      gameState.running = false;
+      switchScreen('screen-result');
+
+      const score = gameState.score;
+      document.getElementById('result-score').textContent = score.toLocaleString();
+      document.getElementById('result-stats').textContent =
+        `수집한 신선 원재료 ${gameState.caughtCount}개 · 최대 ${gameState.maxCombo} 콤보`;
+
+      const gradeBadge = document.getElementById('result-grade-badge');
+      const couponTitle = document.getElementById('coupon-title');
+      const couponSub = document.getElementById('coupon-subtitle');
+      const couponCode = document.getElementById('coupon-code');
+
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+
+      if (score >= 2500) {
+        gradeBadge.textContent = '👑 S등급 · 하동 녹차 & 생과일 마스터';
+        gradeBadge.className = 'inline-block bg-[#FF6B6B] text-white text-xs font-extrabold px-3 py-1 rounded-full border-2 border-[#2D2926] mb-1';
+        couponSub.textContent = '최고 등급 달성 스페셜 리워드!';
+        couponTitle.textContent = '아메리카노 / 버블티 50% 할인권';
+        couponCode.textContent = `AMSV-HALF-${randomSuffix}`;
+      } else if (score >= 1200) {
+        gradeBadge.textContent = '🌟 A등급 · 아마스빈 프레시 장인';
+        gradeBadge.className = 'inline-block bg-[#5C9BD5] text-white text-xs font-extrabold px-3 py-1 rounded-full border-2 border-[#2D2926] mb-1';
+        couponSub.textContent = '신선한 원재료 수집 성공!';
+        couponTitle.textContent = '아마스빈 전 메뉴 2,000원 할인권';
+        couponCode.textContent = `AMSV-2000-${randomSuffix}`;
+      } else {
+        gradeBadge.textContent = '🌱 B등급 · 새싹 원재료 헌터';
+        gradeBadge.className = 'inline-block bg-[#66BB6A] text-white text-xs font-extrabold px-3 py-1 rounded-full border-2 border-[#2D2926] mb-1';
+        couponSub.textContent = '참여해주셔서 감사해요!';
+        couponTitle.textContent = '아마스빈 전 메뉴 1,000원 할인권';
+        couponCode.textContent = `AMSV-1000-${randomSuffix}`;
+      }
+
+      document.getElementById('rank-register-box').classList.remove('hidden');
+      document.getElementById('rank-registered-msg').classList.add('hidden');
+      document.getElementById('player-nickname').value = '';
+      renderRankingList('result-ranking-list');
+    }
+
+    function updateHUD() {
+      const timeVal = Math.max(0, gameState.timeLeft);
+      document.getElementById('hud-time-text').textContent = `${timeVal.toFixed(1)}s`;
+      const pct = (timeVal / GAME_DURATION) * 100;
+      document.getElementById('hud-time-bar').style.width = `${pct}%`;
+      document.getElementById('hud-score').textContent = gameState.score.toLocaleString();
+
+      const comboBadge = document.getElementById('hud-combo-badge');
+      if (gameState.combo >= 2) {
+        comboBadge.classList.remove('hidden');
+        document.getElementById('hud-combo-count').textContent = gameState.combo;
+      } else {
+        comboBadge.classList.add('hidden');
+      }
+    }
+
+    /**
+     * 6. 반응형 Canvas 설정 및 모바일 터치/포인터 조작
+     */
+    function resizeCanvas() {
+      const wrapper = document.getElementById('canvas-wrapper');
+      const canvas = document.getElementById('game-canvas');
+      if (!wrapper || !canvas) return;
+
+      const rect = wrapper.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      gameState.player.y = rect.height - 82;
+    }
+
+    window.addEventListener('resize', () => {
+      if (gameState.running) resizeCanvas();
+    });
+
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    let activePointerId = null;
+
+    function updateTargetFromClientX(clientX) {
+      const rect = canvasWrapper.getBoundingClientRect();
+      const relX = clientX - rect.left;
+      const margin = 42;
+      gameState.player.targetX = Math.max(margin, Math.min(rect.width - margin, relX));
+    }
+
+    canvasWrapper.addEventListener('pointerdown', (e) => {
+      if (!gameState.running || gameState.paused) return;
+      e.preventDefault();
+      activePointerId = e.pointerId;
+      canvasWrapper.setPointerCapture?.(e.pointerId);
+      updateTargetFromClientX(e.clientX);
+    }, { passive: false });
+
+    canvasWrapper.addEventListener('pointermove', (e) => {
+      if (!gameState.running || gameState.paused || e.pointerId !== activePointerId) return;
+      e.preventDefault();
+      updateTargetFromClientX(e.clientX);
+    }, { passive: false });
+
+    function releasePointer(e) {
+      if (e.pointerId === activePointerId) {
+        activePointerId = null;
+      }
+    }
+    canvasWrapper.addEventListener('pointerup', releasePointer);
+    canvasWrapper.addEventListener('pointercancel', releasePointer);
+
+    /**
+     * 7. 게임 업데이트
+     */
+    function spawnItem(logicalW) {
+      const totalWeight = ITEM_TYPES.reduce((acc, it) => acc + it.weight, 0);
+      let r = Math.random() * totalWeight;
+      let chosen = ITEM_TYPES[0];
+      for (const it of ITEM_TYPES) {
+        if (r < it.weight) {
+          chosen = it;
+          break;
+        }
+        r -= it.weight;
+      }
+
+      const progress = 1 - (gameState.timeLeft / GAME_DURATION);
+      const baseSpeed = 195 + progress * 155 + Math.random() * 65;
+
+      gameState.items.push({
+        type: chosen,
+        x: 34 + Math.random() * (logicalW - 68),
+        y: -28,
+        vy: baseSpeed,
+        rotation: (Math.random() - 0.5) * 0.4,
+        rotSpeed: (Math.random() - 0.5) * 2.2,
+        radius: 22
+      });
+    }
+
+    function createParticles(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+        const speed = 70 + Math.random() * 130;
+        gameState.particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 40,
+          life: 0.45 + Math.random() * 0.25,
+          maxLife: 0.7,
+          color,
+          size: 4 + Math.random() * 4
+        });
+      }
+    }
+
+    function addFloatingText(x, y, text, color) {
+      gameState.floatingTexts.push({
+        x,
+        y,
+        text,
+        color,
+        life: 0.85
+      });
+    }
+
+    function updateGame(dt, logicalW, logicalH) {
+      gameState.timeLeft -= dt;
+      if (gameState.timeLeft <= 0) {
+        gameState.timeLeft = 0;
+        updateHUD();
+        endGame();
+        return;
+      }
+
+      for (const c of gameState.clouds) {
+        c.x += c.speed * dt;
+        if (c.x > logicalW + 60) c.x = -60;
+      }
+
+      const dx = gameState.player.targetX - gameState.player.x;
+      gameState.player.x += dx * Math.min(1, dt * 18);
+      if (Math.abs(dx) > 1.5) {
+        gameState.player.walkPhase += dt * 16;
+      } else {
+        gameState.player.walkPhase = 0;
+      }
+
+      if (gameState.player.expressionTimer > 0) {
+        gameState.player.expressionTimer -= dt;
+        if (gameState.player.expressionTimer <= 0) {
+          gameState.player.expression = 'normal';
+        }
+      }
+      if (gameState.player.basketBounce > 0) {
+        gameState.player.basketBounce = Math.max(0, gameState.player.basketBounce - dt * 4);
+      }
+
+      gameState.spawnTimer -= dt;
+      if (gameState.spawnTimer <= 0) {
+        spawnItem(logicalW);
+        const progress = 1 - (gameState.timeLeft / GAME_DURATION);
+        gameState.spawnTimer = Math.max(0.28, 0.62 - progress * 0.28);
+      }
+
+      const basketX = gameState.player.x;
+      const basketY = gameState.player.y - 46;
+      const basketHalfW = 36;
+
+      for (let i = gameState.items.length - 1; i >= 0; i--) {
+        const item = gameState.items[i];
+        item.y += item.vy * dt;
+        item.rotation += item.rotSpeed * dt;
+
+        const hitX = Math.abs(item.x - basketX) < (basketHalfW + item.radius * 0.55);
+        const hitY = Math.abs(item.y - basketY) < 22;
+
+        if (hitX && hitY) {
+          if (item.type.good) {
+            gameState.combo += 1;
+            if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+            gameState.caughtCount += 1;
+
+            const bonus = gameState.combo >= 3 ? 50 : 0;
+            const gained = item.type.score + bonus;
+            gameState.score += gained;
+
+            gameState.player.expression = 'happy';
+            gameState.player.expressionTimer = 0.55;
+            gameState.player.basketBounce = 1;
+
+            gameState.basketContents.push(item.type.id);
+            if (gameState.basketContents.length > 5) {
+              gameState.basketContents.shift();
+            }
+
+            playCatchSound(true, gameState.combo);
+            createParticles(item.x, basketY, item.type.color, 12);
+            const label = bonus > 0 ? `+${gained} FRESH!` : `+${gained}!`;
+            addFloatingText(item.x, basketY - 18, label, '#2E7D32');
+          } else {
+            gameState.combo = 0;
+            gameState.score = Math.max(0, gameState.score + item.type.score);
+            gameState.player.expression = 'ouch';
+            gameState.player.expressionTimer = 0.7;
+
+            playCatchSound(false);
+            createParticles(item.x, basketY, '#7E57C2', 14);
+            addFloatingText(item.x, basketY - 18, `앗! ${item.type.name} -150`, '#C62828');
+
+            const shell = document.getElementById('app-shell');
+            shell.classList.remove('shake-active');
+            void shell.offsetWidth;
+            shell.classList.add('shake-active');
+          }
+
+          gameState.items.splice(i, 1);
+          continue;
+        }
+
+        if (item.y > logicalH + 40) {
+          gameState.items.splice(i, 1);
+        }
+      }
+
+      for (let i = gameState.particles.length - 1; i >= 0; i--) {
+        const p = gameState.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 260 * dt;
+        p.life -= dt;
+        if (p.life <= 0) gameState.particles.splice(i, 1);
+      }
+
+      for (let i = gameState.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = gameState.floatingTexts[i];
+        ft.y -= 42 * dt;
+        ft.life -= dt;
+        if (ft.life <= 0) gameState.floatingTexts.splice(i, 1);
+      }
+
+      updateHUD();
+    }
+
+    /**
+     * 8. 2D 손그림 벡터 일러스트 렌더링 함수들 (Canvas)
+     */
+    function drawBackground(ctx, w, h) {
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.75);
+      skyGrad.addColorStop(0, '#8ECBF5');
+      skyGrad.addColorStop(1, '#DDF1FF');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      for (const c of gameState.clouds) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.scale(c.scale, c.scale);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.beginPath();
+        ctx.arc(-22, 6, 16, 0, Math.PI * 2);
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.arc(24, 5, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      const hillY = h - 130;
+      ctx.fillStyle = '#689F38';
+      ctx.beginPath();
+      ctx.moveTo(0, hillY);
+      ctx.quadraticCurveTo(w * 0.28, hillY - 38, w * 0.58, hillY - 8);
+      ctx.quadraticCurveTo(w * 0.82, hillY + 14, w, hillY - 22);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
+
+      const grassY = h - 92;
+      ctx.fillStyle = '#8BC34A';
+      ctx.fillRect(0, grassY, w, 92);
+
+      ctx.strokeStyle = '#558B2F';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(0, grassY);
+      ctx.lineTo(w, grassY);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#689F38';
+      ctx.lineWidth = 2;
+      const tufts = [0.12, 0.32, 0.55, 0.78, 0.91];
+      tufts.forEach((ratio, idx) => {
+        const tx = w * ratio;
+        const ty = grassY + 24 + (idx % 2) * 26;
+        ctx.beginPath();
+        ctx.moveTo(tx - 5, ty);
+        ctx.lineTo(tx - 8, ty - 7);
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx, ty - 9);
+        ctx.moveTo(tx + 5, ty);
+        ctx.lineTo(tx + 8, ty - 7);
+        ctx.stroke();
+      });
+
+      const flowers = [
+        { x: w * 0.18, y: grassY + 52, c: '#FFF59D' },
+        { x: w * 0.72, y: grassY + 46, c: '#FFFFFF' },
+        { x: w * 0.85, y: grassY + 64, c: '#FFCDD2' }
+      ];
+      flowers.forEach(f => {
+        ctx.fillStyle = f.c;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FBC02D';
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawFallingItem(ctx, item) {
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      ctx.rotate(item.rotation);
+
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#2D2926';
+      ctx.lineWidth = 2.4;
+
+      switch (item.type.id) {
+        case 'greentea': {
+          ctx.fillStyle = '#66BB6A';
+          ctx.beginPath();
+          ctx.moveTo(0, -19);
+          ctx.bezierCurveTo(15, -10, 16, 10, 0, 20);
+          ctx.bezierCurveTo(-16, 10, -15, -10, 0, -19);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(0, -14); ctx.lineTo(0, 17);
+          ctx.moveTo(0, -4); ctx.lineTo(7, -9);
+          ctx.moveTo(0, 3); ctx.lineTo(-7, -2);
+          ctx.moveTo(0, 9); ctx.lineTo(6, 5);
+          ctx.stroke();
+          break;
+        }
+        case 'strawberry': {
+          ctx.fillStyle = '#EF4444';
+          ctx.beginPath();
+          ctx.moveTo(0, -13);
+          ctx.bezierCurveTo(16, -13, 19, 3, 0, 20);
+          ctx.bezierCurveTo(-19, 3, -16, -13, 0, -13);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#43A047';
+          ctx.beginPath();
+          ctx.moveTo(-12, -12); ctx.lineTo(-5, -7); ctx.lineTo(0, -16);
+          ctx.lineTo(5, -7); ctx.lineTo(12, -12); ctx.lineTo(6, -3); ctx.lineTo(-6, -3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#FFF59D';
+          const seeds = [[-5, 1], [5, 1], [0, 6], [-4, 11], [4, 11]];
+          seeds.forEach(([sx, sy]) => {
+            ctx.beginPath();
+            ctx.ellipse(sx, sy, 1.3, 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          break;
+        }
+        case 'orange': {
+          ctx.fillStyle = '#FB8C00';
+          ctx.beginPath();
+          ctx.arc(0, 0, 18, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#FFE0B2';
+          ctx.beginPath();
+          ctx.arc(0, 0, 13.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFA726';
+          for (let a = 0; a < 6; a++) {
+            const ang = (Math.PI / 3) * a;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, 11.5, ang + 0.08, ang + Math.PI / 3 - 0.08);
+            ctx.closePath();
+            ctx.fill();
+          }
+          break;
+        }
+        case 'milk': {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.roundRect(-13, -10, 26, 28, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#42A5F5';
+          ctx.beginPath();
+          ctx.moveTo(-13, -10); ctx.lineTo(-7, -19); ctx.lineTo(7, -19); ctx.lineTo(13, -10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#90CAF9';
+          ctx.fillRect(-11.5, 4, 23, 8);
+          ctx.fillStyle = '#2D2926';
+          ctx.beginPath();
+          ctx.arc(-5, -3, 3, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case 'yogurt': {
+          ctx.fillStyle = '#FFFDF9';
+          ctx.beginPath();
+          ctx.moveTo(-10, -11); ctx.lineTo(10, -11); ctx.lineTo(14, 15);
+          ctx.quadraticCurveTo(0, 19, -14, 15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#CE93D8';
+          ctx.beginPath();
+          ctx.roundRect(-12, -17, 24, 7, 3);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#BA68C8';
+          ctx.beginPath();
+          ctx.arc(0, 3, 5, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case 'syrup': {
+          ctx.fillStyle = '#4E342E';
+          ctx.beginPath();
+          ctx.roundRect(-12, -8, 24, 26, 5);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#6D4C41';
+          ctx.fillRect(-5, -16, 10, 8);
+          ctx.strokeRect(-5, -16, 10, 8);
+          ctx.fillStyle = '#E53935';
+          ctx.fillRect(-6, -20, 12, 4);
+          ctx.strokeRect(-6, -20, 12, 4);
+
+          ctx.fillStyle = '#FFEBEE';
+          ctx.fillRect(-8, -2, 16, 14);
+          ctx.strokeStyle = '#D32F2F';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-4, 2); ctx.lineTo(4, 8);
+          ctx.moveTo(4, 2); ctx.lineTo(-4, 8);
+          ctx.stroke();
+          break;
+        }
+        case 'powder': {
+          ctx.fillStyle = '#7E57C2';
+          ctx.beginPath();
+          ctx.roundRect(-14, -15, 28, 30, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#FFEB3B';
+          ctx.beginPath();
+          ctx.moveTo(0, -7); ctx.lineTo(8, 7); ctx.lineTo(-8, 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#2D2926';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('!', 0, 5);
+          break;
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawTteongguPlayer(ctx) {
+      const p = gameState.player;
+      const bounceY = Math.abs(Math.sin(p.walkPhase)) * 4;
+      const legSwing = Math.sin(p.walkPhase) * 4;
+
+      ctx.save();
+      ctx.translate(p.x, p.y - bounceY);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      ctx.fillStyle = 'rgba(45, 75, 25, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(0, 46 + bounceY, 28, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#2D2926';
+      ctx.lineWidth = 2.8;
+      ctx.fillStyle = '#FFFFFF';
+
+      ctx.beginPath();
+      ctx.roundRect(-17, 25 - legSwing * 0.5, 13, 18, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.roundRect(4, 25 + legSwing * 0.5, 13, 18, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-20, 2);
+      ctx.bezierCurveTo(-24, 15, -21, 29, -15, 31);
+      ctx.lineTo(15, 31);
+      ctx.bezierCurveTo(21, 29, 24, 15, 20, 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#2D2926';
+      ctx.beginPath();
+      ctx.moveTo(0, 13);
+      ctx.bezierCurveTo(0, 9, -6, 9, -6, 14);
+      ctx.bezierCurveTo(-6, 18, 0, 21, 0, 21);
+      ctx.bezierCurveTo(0, 21, 6, 18, 6, 14);
+      ctx.bezierCurveTo(6, 9, 0, 9, 0, 13);
+      ctx.fill();
+
+      const basketOffset = -p.basketBounce * 6;
+      ctx.lineWidth = 8.5;
+      ctx.strokeStyle = '#2D2926';
+      ctx.beginPath();
+      ctx.moveTo(-18, 6); ctx.quadraticCurveTo(-32, -8, -24, -28 + basketOffset);
+      ctx.moveTo(18, 6); ctx.quadraticCurveTo(32, -8, 24, -28 + basketOffset);
+      ctx.stroke();
+
+      ctx.lineWidth = 3.8;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-18, 6); ctx.quadraticCurveTo(-32, -8, -24, -28 + basketOffset);
+      ctx.moveTo(18, 6); ctx.quadraticCurveTo(32, -8, 24, -28 + basketOffset);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#2D2926';
+      ctx.lineWidth = 2.8;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(0, -13, 28, 23, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(-23, -26);
+      ctx.bezierCurveTo(-35, -28, -36, -17, -25, -15);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#2D2926';
+      ctx.beginPath();
+      ctx.moveTo(23, -26);
+      ctx.bezierCurveTo(35, -28, 36, -17, 25, -15);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#2D2926';
+      ctx.beginPath();
+      ctx.moveTo(-18, -31);
+      ctx.bezierCurveTo(-8, -38, 10, -38, 19, -30);
+      ctx.bezierCurveTo(13, -21, 4, -19, -3, -23);
+      ctx.bezierCurveTo(-9, -26, -14, -27, -18, -31);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.ellipse(-22, -6, 5, 7, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (p.expression === 'happy') {
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(-9, -14, 3.5, Math.PI, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(9, -14, 3.5, Math.PI, 0);
+        ctx.stroke();
+      } else if (p.expression === 'ouch') {
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(-12, -17); ctx.lineTo(-7, -14); ctx.lineTo(-12, -11);
+        ctx.moveTo(12, -17); ctx.lineTo(7, -14); ctx.lineTo(12, -11);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = '#2D2926';
+        ctx.beginPath();
+        ctx.ellipse(-9, -15, 2.3, 3.3, 0, 0, Math.PI * 2);
+        ctx.ellipse(9, -15, 2.3, 3.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = '#2D2926';
+      ctx.beginPath();
+      ctx.roundRect(-4.5, -12, 9, 5.2, 2.5);
+      ctx.fill();
+
+      ctx.strokeStyle = p.expression === 'happy' ? '#FF7043' : '#2D2926';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-17, -10); ctx.lineTo(-18, -6);
+      ctx.moveTo(-13, -10); ctx.lineTo(-14, -6);
+      ctx.moveTo(13, -10); ctx.lineTo(13, -6);
+      ctx.moveTo(17, -10); ctx.lineTo(17, -6);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#2D2926';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-4, -4); ctx.lineTo(4, -4);
+      ctx.stroke();
+
+      ctx.fillStyle = '#66BB6A';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(5, -4);
+      ctx.quadraticCurveTo(13, -8, 19, -2);
+      ctx.quadraticCurveTo(12, 1, 5, -4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#81C784';
+      ctx.beginPath();
+      ctx.moveTo(6, -4);
+      ctx.quadraticCurveTo(11, 1, 14, 4);
+      ctx.quadraticCurveTo(8, 3, 6, -4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(0, -45 + basketOffset);
+
+      gameState.basketContents.forEach((id, idx) => {
+        const ix = -16 + idx * 8;
+        const iy = -3 - (idx % 2) * 3;
+        ctx.strokeStyle = '#2D2926';
+        ctx.lineWidth = 1.6;
+        if (id === 'greentea') {
+          ctx.fillStyle = '#66BB6A';
+          ctx.beginPath();
+          ctx.ellipse(ix, iy, 6, 9, -0.3, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        } else if (id === 'strawberry') {
+          ctx.fillStyle = '#EF4444';
+          ctx.beginPath();
+          ctx.arc(ix, iy, 7, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        } else if (id === 'orange') {
+          ctx.fillStyle = '#FB8C00';
+          ctx.beginPath();
+          ctx.arc(ix, iy, 7, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        } else {
+          ctx.fillStyle = '#E3F2FD';
+          ctx.beginPath();
+          ctx.roundRect(ix - 5, iy - 7, 10, 11, 2);
+          ctx.fill(); ctx.stroke();
+        }
+      });
+
+      ctx.strokeStyle = '#2D2926';
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = '#D7A86E';
+      ctx.beginPath();
+      ctx.moveTo(-34, 0); ctx.lineTo(34, 0); ctx.lineTo(26, 19);
+      ctx.quadraticCurveTo(0, 23, -26, 19);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#E6BE8A';
+      ctx.beginPath();
+      ctx.roundRect(-36, -4, 72, 6, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = '#8D5B2C';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-18, 2); ctx.lineTo(-14, 19);
+      ctx.moveTo(0, 2); ctx.lineTo(0, 20);
+      ctx.moveTo(18, 2); ctx.lineTo(14, 19);
+      ctx.moveTo(-29, 9); ctx.lineTo(29, 9);
+      ctx.stroke();
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function drawEffects(ctx) {
+      for (const p of gameState.particles) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      for (const ft of gameState.floatingTexts) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, ft.life * 1.4);
+        ctx.font = 'bold 16px "Jua", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      }
+    }
+
+    /**
+     * 9. 메인 애니메이션 루프
+     */
+    function gameLoop(timestamp) {
+      if (!gameState.running || gameState.paused) return;
+
+      const dt = Math.min(0.05, (timestamp - gameState.lastTimestamp) / 1000);
+      gameState.lastTimestamp = timestamp;
+
+      const canvas = document.getElementById('game-canvas');
+      const ctx = canvas.getContext('2d');
+      const logicalW = canvas.clientWidth;
+      const logicalH = canvas.clientHeight;
+
+      updateGame(dt, logicalW, logicalH);
+
+      ctx.clearRect(0, 0, logicalW, logicalH);
+      drawBackground(ctx, logicalW, logicalH);
+      drawTteongguPlayer(ctx);
+      for (const item of gameState.items) {
+        drawFallingItem(ctx, item);
+      }
+      drawEffects(ctx);
+
+      if (gameState.running && !gameState.paused) {
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    renderRankingList('modal-ranking-list');
+  </script>
+</body>
+</html>
